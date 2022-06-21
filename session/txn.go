@@ -61,7 +61,7 @@ type LazyTxn struct {
 
 	// TxnInfo is added for the lock view feature, the data is frequent modified but
 	// rarely read (just in query select * from information_schema.tidb_trx).
-	// The data in this session would be query by other sessions, so Mutex is necessary.
+	// The data in this session would be queried by other sessions, so Mutex is necessary.
 	// Since read is rare, the reader can copy-on-read to get a data snapshot.
 	mu struct {
 		sync.RWMutex
@@ -246,7 +246,7 @@ func (txn *LazyTxn) changePendingToValid(ctx context.Context) error {
 	txn.Transaction = t
 	txn.initStmtBuf()
 
-	// The txnInfo may already recorded the first statement (usually "begin") when it's pending, so keep them.
+	// The txnInfo may already be recorded the first statement (usually "begin") when it's pending, so keep them.
 	txn.mu.Lock()
 	defer txn.mu.Unlock()
 	txn.resetTxnInfo(
@@ -346,7 +346,7 @@ func (txn *LazyTxn) Commit(ctx context.Context) error {
 		}
 	})
 
-	// mockCommitRetryForAutoIncID is used to mock an commit retry for adjustAutoIncrementDatum.
+	// mockCommitRetryForAutoIncID is used to mock a commit retry for adjustAutoIncrementDatum.
 	failpoint.Inject("mockCommitRetryForAutoIncID", func(val failpoint.Value) {
 		if val.(bool) && !mockAutoIncIDRetry() {
 			enableMockAutoIncIDRetry()
